@@ -41,8 +41,14 @@ def main():
     # Start Tornado WebSocket server
     def start_websocket_server():
         app = Application([(r"/chat", ChatHandler)])
-        app.listen(8888)
-        IOLoop.current().start()
+        try:
+            app.listen(8888)
+            IOLoop.current().start()
+        except OSError as e:
+            if e.errno == 98:
+                print("Address already in use. Please restart the application.")
+            else:
+                raise
 
     threading.Thread(target=start_websocket_server, daemon=True).start()
 
@@ -67,6 +73,15 @@ def main():
 
 @st.cache(persist=True)
 def inference(model_name, user_input, conversation):
+    model_options = {
+        "Rhea 72B (Pipeline)": "rhea_pipeline",
+        "Rhea 72B (Direct)": "rhea_direct",
+        "Mixtral 8x22B (Pipeline)": "mixtral_pipeline",
+        "Mixtral 8x22B (Mixtral's Inference)": "mixtral_inference",
+        "OpenCode 34B (Pipeline)": "open_code_pipeline",
+        "OpenCode 34B (Direct)": "open_code_direct",
+    }
+    response = ""
     if model_options[model_name] == "rhea_pipeline":
         response = get_rhea_pipeline()(user_input, max_length=50, do_sample=True)[0]['generated_text']
     elif model_options[model_name] == "rhea_direct":
