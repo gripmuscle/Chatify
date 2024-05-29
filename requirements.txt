@@ -2,5 +2,5 @@ streamlit
 transformers
 torch
 tornado
-mistral-common
+
 
