@@ -20,37 +20,6 @@ def get_mixtral_pipeline():
 def get_open_code_model():
     return AutoModelForCausalLM.from_pretrained("m-a-p/OpenCodeInterpreter-DS-33B"), AutoTokenizer.from_pretrained("m-a-p/OpenCodeInterpreter-DS-33B")
 
-# Mixtral's inference script setup
-from mistral_common.protocol.instruct.messages import (
-    AssistantMessage,
-    UserMessage,
-)
-from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
-from mistral_common.tokens.instruct.normalize import ChatCompletionRequest
-
-tokenizer_v3 = MistralTokenizer.v3()
-
-mistral_query = ChatCompletionRequest(
-    messages=[
-        UserMessage(content="How many experts ?"),
-        AssistantMessage(content="8"),
-        UserMessage(content="How big ?"),
-        AssistantMessage(content="22B"),
-        UserMessage(content="Noice 🎉 !"),
-    ],
-    model="test",
-)
-hf_messages = mistral_query.model_dump()['messages']
-
-tokenized_mistral = tokenizer_v3.encode_chat_completion(mistral_query).tokens
-
-@st.cache(allow_output_mutation=True)
-def get_mixtral_tokenizer():
-    tokenizer_hf = AutoTokenizer.from_pretrained('mistralai/Mixtral-8x22B-Instruct-v0.1')
-    return tokenizer_hf.apply_chat_template(hf_messages, tokenize=True)
-
-assert tokenized_mistral == get_mixtral_tokenizer()
-
 # WebSocket handling with Tornado
 class ChatHandler(WebSocketHandler):
     clients = set()
@@ -118,4 +87,3 @@ def inference(model_name, user_input, conversation):
 
 if __name__ == "__main__":
     main()
-
