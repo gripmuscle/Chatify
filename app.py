@@ -6,17 +6,17 @@ from tornado.web import Application, RequestHandler
 from tornado.websocket import WebSocketHandler
 
 # Function to initialize Rhea 72B pipeline
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def get_rhea_pipeline():
     return pipeline("text-generation", model="davidkim205/Rhea-72b-v0.5")
 
 # Function to initialize Mixtral 8x22B pipeline
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def get_mixtral_pipeline():
     return pipeline("text-generation", model="mistralai/Mixtral-8x22B-Instruct-v0.1")
 
 # Function to load OpenCode 34B model and tokenizer
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def get_open_code_model():
     return AutoModelForCausalLM.from_pretrained("m-a-p/OpenCodeInterpreter-DS-33B"), AutoTokenizer.from_pretrained("m-a-p/OpenCodeInterpreter-DS-33B")
 
@@ -71,7 +71,7 @@ def main():
         thread = threading.Thread(target=inference, args=(model_name, user_input, conversation))
         thread.start()
 
-@st.cache(persist=True)
+@st.cache_resource
 def inference(model_name, user_input, conversation):
     model_options = {
         "Rhea 72B (Pipeline)": "rhea_pipeline",
@@ -99,6 +99,7 @@ def inference(model_name, user_input, conversation):
         output = model.generate(**inputs)
         response = tokenizer.decode(output[0], skip_special_tokens=True)
     conversation += f"\nYou: {user_input}\nChatbot: {response}\n"
+    st.text_area("Conversation", conversation, height=200)
 
 if __name__ == "__main__":
     main()
