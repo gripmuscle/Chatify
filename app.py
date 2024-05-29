@@ -1,9 +1,5 @@
 import streamlit as st
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
-import threading
-from tornado.ioloop import IOLoop
-from tornado.web import Application, RequestHandler
-from tornado.websocket import WebSocketHandler
 
 # Function to initialize Rhea 72B pipeline
 @st.cache_resource
@@ -34,37 +30,9 @@ def get_mixtral_model():
 def get_open_code_model():
     return AutoModelForCausalLM.from_pretrained("m-a-p/OpenCodeInterpreter-DS-33B"), AutoTokenizer.from_pretrained("m-a-p/OpenCodeInterpreter-DS-33B")
 
-# WebSocket handling with Tornado
-class ChatHandler(WebSocketHandler):
-    clients = set()
-
-    def open(self):
-        self.clients.add(self)
-
-    def on_message(self, message):
-        for client in self.clients:
-            client.write_message(message)
-
-    def on_close(self):
-        self.clients.remove(self)
-
 # Streamlit app main function
 def main():
     st.title("Chatbot Interface")
-
-    # Start Tornado WebSocket server
-    def start_websocket_server():
-        app = Application([(r"/chat", ChatHandler)])
-        try:
-            app.listen(8888)
-            IOLoop.current().start()
-        except OSError as e:
-            if e.errno == 98:
-                print("Address already in use. Please restart the application.")
-            else:
-                raise
-
-    threading.Thread(target=start_websocket_server, daemon=True).start()
 
     # Model selection
     model_options = {
@@ -84,7 +52,7 @@ def main():
         response = inference(model_name, user_input)
         st.text_area("Chatbot:", value=response, height=200)
 
-@st.cache_resource
+@st.cache_data
 def inference(model_name, user_input):
     model_options = {
         "Rhea 72B (Pipeline)": "rhea_pipeline",
