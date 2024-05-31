@@ -42,24 +42,26 @@ with st.sidebar:
             st.write(f"**{conversation.title}** (Author: {conversation.author})")
 
 # Main chat interface
-# User input for the chatbot
-user_input = st.text_input("You:", "Hello, how can I assist you?")
+# Check if chatbot is defined
+if 'chatbot' in locals():
+    # User input for the chatbot
+    user_input = st.text_input("You:", "Hello, how can I assist you?")
 
-# Generate response when the user enters a message
-if user_input:
-    # Query the Hugging Chat API
-    output = chatbot.query(user_input)
+    # Generate response when the user enters a message
+    if user_input:
+        # Query the Hugging Chat API
+        output = chatbot.query(user_input)
 
-    # Display the model's response
-    st.text_area("Bot:", value=output, height=200, max_chars=None, key=None)
+        # Display the model's response
+        st.text_area("Bot:", value=output, height=200, max_chars=None, key=None)
 
-# Start new conversation
-if st.button("Start New Conversation"):
-    chatbot.new_conversation(switch_to=True)
+    # Start new conversation
+    if st.button("Start New Conversation"):
+        chatbot.new_conversation(switch_to=True)
 
-# Delete conversation
-if st.button("Delete Conversation"):
-    chatbot.delete_conversation()
+    # Delete conversation
+    if st.button("Delete Conversation"):
+        chatbot.delete_conversation()
 
 # Run the Streamlit app
 if __name__ == "__main__":
