@@ -39,13 +39,13 @@ with st.sidebar:
         st.subheader("Chat History")
         conversation_list = chatbot.get_conversation_list()
         for conversation in conversation_list:
-            st.write(f"**{conversation.title}** (Author: {conversation.author})")
+            st.write(f"**{conversation.title}**")
 
 # Main chat interface
 # Check if chatbot is defined
 if 'chatbot' in locals():
     # User input for the chatbot
-    user_input = st.text_input("You:", "Hello, how can I assist you?")
+    user_input = st.text_input("You:", "")
 
     # Generate response when the user enters a message
     if user_input:
