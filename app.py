@@ -1,49 +1,49 @@
 import streamlit as st
-import requests
+from hugchat import hugchat
+from hugchat.login import Login
 
 # Set page title and favicon
 st.set_page_config(page_title="Chatify+", page_icon=":robot_face:")
 
-# Define the API endpoints and headers for each model
-models = {
-    "Llama 3 8B": {
-        "API_URL": "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct",
-        "headers": {"Authorization": "Bearer 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"}
-    },
-    "Mixtral": {
-        "API_URL": "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1",
-        "headers": {"Authorization": "Bearer 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"}
-    },
-    "Llama 3 70B": {
-        "API_URL": "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-70B-Instruct",
-        "headers": {"Authorization": "Bearer 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"}
-    }
-}
+# Log in to huggingface and grant authorization to huggingchat
+EMAIL = "your email"
+PASSWD = "your password"
+cookie_path_dir = "./cookies/"
+sign = Login(EMAIL, PASSWD)
+cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
 
-# Function to query the model API
-def query(model_config, payload):
-    response = requests.post(model_config['API_URL'], headers=model_config['headers'], json=payload)
-    return response.json()
+# Create your ChatBot
+chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
 
 # Streamlit app layout
 st.title("Chatify+")
 
+# Get the available models
+models = chatbot.get_available_llm_models()
+
+# Model switching
+selected_model = st.selectbox("Select a model", models)
+model_index = models.index(selected_model)
+chatbot.switch_llm(model_index)
+
 # User input for the chatbot
 user_input = st.text_input("You:", "Hello, how can I assist you?")
 
-# Select the model
-selected_model = st.selectbox("Select a model", list(models.keys()))
-
 # Generate response when the user enters a message
 if user_input:
-    # Query the selected model API
-    model_config = models[selected_model]
-    output = query(model_config, {
-        "inputs": user_input,
-    })
-    
+    # Query the Hugging Chat API
+    output = chatbot.query(user_input)
+
     # Display the model's response
-    st.text_area("Bot:", value=output[0]['generated_text'], height=200, max_chars=None, key=None)
+    st.text_area("Bot:", value=output, height=200, max_chars=None, key=None)
+
+# Start new conversation
+if st.button("Start New Conversation"):
+    chatbot.new_conversation(switch_to=True)
+
+# Delete conversation
+if st.button("Delete Conversation"):
+    chatbot.delete_conversation()
 
 # Run the Streamlit app
 if __name__ == "__main__":
