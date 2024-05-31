@@ -21,11 +21,11 @@ def save_conversation_history(collection, chat_id, history):
 
 # Function to get all chat IDs from MongoDB
 def get_all_chat_ids(collection):
-    chat_ids = []
-    for doc in collection.find({}):
-        if "chat_id" in doc:
-            chat_ids.append(doc["chat_id"])
-    return chat_ids
+    return [doc["chat_id"] for doc in collection.find({}) if "chat_id" in doc]
+
+# Function to delete a conversation from MongoDB
+def delete_conversation(collection, chat_id):
+    collection.delete_one({"chat_id": chat_id})
 
 # Sidebar for email, password input, and chat history
 with st.sidebar:
@@ -66,6 +66,21 @@ if 'chatbot' in locals():
     chat_id = st.session_state.get("chat_id", str(uuid.uuid4()))
     conversation_history = load_conversation_history(collection, chat_id)
 
+    # Display the conversation history in the sidebar
+    st.sidebar.subheader("Conversation History")
+    chat_ids = get_all_chat_ids(collection)
+    selected_chat_id = st.sidebar.selectbox("Select a chat", chat_ids, key="selected_chat_id")
+
+    # Display the selected chat's conversation
+    if selected_chat_id:
+        selected_chat_history = load_conversation_history(collection, selected_chat_id)
+        st.subheader(f"Conversation with {selected_chat_id}")
+        for i, message in enumerate(selected_chat_history):
+            if message.startswith("You:"):
+                st.text_area(f"You:", value=message.split(": ", 1)[1], height=75, key=f"user_message_{i}")
+            else:
+                st.text_area(f"Bot:", value=message.split(": ", 1)[1], height=75, key=f"bot_message_{i}")
+
     # User input for the chatbot
     user_input = st.text_input("You:", key="user_input")
 
@@ -86,21 +101,6 @@ if 'chatbot' in locals():
         # Display the model's response
         st.text_area("Bot:", value=output, height=200, max_chars=None, key="bot_response")
 
-    # Display the conversation history in the sidebar
-    st.sidebar.subheader("Conversation History")
-    chat_ids = get_all_chat_ids(collection)
-    selected_chat_id = st.sidebar.selectbox("Select a chat", chat_ids, key="selected_chat_id")
-
-    # Display the selected chat's conversation
-    if selected_chat_id:
-        selected_chat_history = load_conversation_history(collection, selected_chat_id)
-        st.subheader(f"Conversation with {selected_chat_id}")
-        for i, message in enumerate(selected_chat_history):
-            if message.startswith("You:"):
-                st.text_area(f"You:", value=message.split(": ", 1)[1], height=75, key=f"user_message_{i}")
-            else:
-                st.text_area(f"Bot:", value=message.split(": ", 1)[1], height=75, key=f"bot_message_{i}")
-
     # Allow user to name the conversation
     chat_name = st.text_input("Name this conversation:", key="chat_name")
 
@@ -116,10 +116,29 @@ if 'chatbot' in locals():
         save_conversation_history(collection, chat_id, conversation_history)
 
     # Delete conversation
-    if st.button("Delete Conversation"):
-        chatbot.delete_conversation()
-        conversation_history = []  # Reset the conversation history
-        save_conversation_history(collection, chat_id, conversation_history)
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Delete Chat"):
+            delete_conversation(collection, selected_chat_id)
+            st.experimental_rerun()
+
+    with col2:
+        user_input = st.text_input("", key="user_input_bottom", label_visibility="collapsed")
+        if user_input:
+            # Append the user's message to the history
+            conversation_history.append(f"You: {user_input}")
+
+            # Query the Hugging Chat API
+            output = chatbot.query(user_input)
+
+            # Append the bot's response to the history
+            conversation_history.append(f"Bot: {output}")
+
+            # Save the conversation history
+            save_conversation_history(collection, chat_id, conversation_history)
+
+            # Display the model's response
+            st.text_area("Bot:", value=output, height=200, max_chars=None, key="bot_response_bottom")
 
 # Run the Streamlit app
 if __name__ == "__main__":
