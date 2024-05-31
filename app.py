@@ -5,27 +5,43 @@ from hugchat.login import Login
 # Set page title and favicon
 st.set_page_config(page_title="Chatify+", page_icon=":robot_face:")
 
-# Log in to huggingface and grant authorization to huggingchat
-EMAIL = "business.saboorhassan@gmail.com"
-PASSWD = "KVWQ^niKn6N8(4z"
-cookie_path_dir = "./cookies/"
-sign = Login(EMAIL, PASSWD)
-cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
-
-# Create your ChatBot
-chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
-
 # Streamlit app layout
 st.title("Chatify+")
 
-# Get the available models
-models = chatbot.get_available_llm_models()
+# Sidebar for email, password input, and chat history
+with st.sidebar:
+    # User input for email and password
+    email = st.text_input("Email:")
+    password = st.text_input("Password:", type="password")
 
-# Model switching
-selected_model = st.selectbox("Select a model", models)
-model_index = models.index(selected_model)
-chatbot.switch_llm(model_index)
+    # Check if email and password are provided
+    if email and password:
+        # Log in to huggingface and grant authorization to huggingchat
+        cookie_path_dir = "./cookies/"
+        sign = Login(email, password)
+        cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
 
+        # Create your ChatBot
+        chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
+
+        # Get the available models
+        models = chatbot.get_available_llm_models()
+
+        # Extract model names from the Model objects
+        model_names = [model.name for model in models]
+
+        # Model switching
+        selected_model = st.selectbox("Select a model", model_names)
+        model_index = model_names.index(selected_model)
+        chatbot.switch_llm(model_index)
+
+        # Display chat history
+        st.subheader("Chat History")
+        conversation_list = chatbot.get_conversation_list()
+        for conversation in conversation_list:
+            st.write(f"**{conversation.title}** (Author: {conversation.author})")
+
+# Main chat interface
 # User input for the chatbot
 user_input = st.text_input("You:", "Hello, how can I assist you?")
 
