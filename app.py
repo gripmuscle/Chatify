@@ -21,7 +21,11 @@ def save_conversation_history(collection, chat_id, history):
 
 # Function to get all chat IDs from MongoDB
 def get_all_chat_ids(collection):
-    return [doc["chat_id"] for doc in collection.find({})]
+    chat_ids = []
+    for doc in collection.find({}):
+        if "chat_id" in doc:
+            chat_ids.append(doc["chat_id"])
+    return chat_ids
 
 # Sidebar for email, password input, and chat history
 with st.sidebar:
