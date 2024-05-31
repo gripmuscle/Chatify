@@ -6,7 +6,7 @@ from hugchat.login import Login
 st.set_page_config(page_title="Chatify+", page_icon=":robot_face:")
 
 # Log in to huggingface and grant authorization to huggingchat
-EMAIL = "your email"
+EMAIL = "business.saboorhassan@gmail.com"
 PASSWD = "your password"
 cookie_path_dir = "./cookies/"
 sign = Login(EMAIL, PASSWD)
