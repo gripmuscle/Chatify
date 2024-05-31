@@ -7,7 +7,7 @@ st.set_page_config(page_title="Chatify+", page_icon=":robot_face:")
 
 # Log in to huggingface and grant authorization to huggingchat
 EMAIL = "business.saboorhassan@gmail.com"
-PASSWD = "your password"
+PASSWD = "KVWQ^niKn6N8(4z"
 cookie_path_dir = "./cookies/"
 sign = Login(EMAIL, PASSWD)
 cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
