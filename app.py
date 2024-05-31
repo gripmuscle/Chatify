@@ -4,12 +4,6 @@ from hugchat.login import Login
 from pymongo import MongoClient
 
 # Set page title and favicon
-st.set_page_config(page_title="Chatify+", page_icon=":robot_face:"import streamlit as st
-from hugchat import hugchat
-from hugchat.login import Login
-from pymongo import MongoClient
-
-# Set page title and favicon
 st.set_page_config(page_title="Chatify+", page_icon=":robot_face:")
 
 # Streamlit app layout
