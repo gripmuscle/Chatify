@@ -57,7 +57,7 @@ with st.sidebar:
 # Main chat interface
 if 'chatbot' in locals():
     # MongoDB connection
-    connection_string = f"mongodb+srv://chatify:<chatify>@chatify.lshb08e.mongodb.net/?retryWrites=true&w=majority&appName=Chatify"
+    connection_string = f"mongodb+srv://chatify:chatify@chatify.lshb08e.mongodb.net/?retryWrites=true&w=majority&appName=Chatify"
     client = MongoClient(connection_string)
     db = client.Chatify
     collection = db.conversation_history
