@@ -4,11 +4,20 @@ from hugchat.login import Login
 from pymongo import MongoClient
 import uuid
 
+# Load secrets from the secrets.toml file
+huggingface_token = st.secrets["default"]["huggingface_token"]
+mongodb_connection_string = st.secrets["mongodb"]["connection_string"]
+rhea_model_name = st.secrets["models"]["rhea_model_name"]
+mixtral_model_name = st.secrets["models"]["mixtral_model_name"]
+opencode_model_name = st.secrets["models"]["opencode_model_name"]
+max_new_tokens = st.secrets["config"]["max_new_tokens"]
+
 # Set page title and favicon
 st.set_page_config(page_title="Chatify+", page_icon=":robot_face:")
 
 # Streamlit app layout
-st.title("Chatify+")
+st.title("Chatify+ :robot_face:")
+st.write("Welcome to Chatify+, your personal AI-powered chat assistant!")
 
 # Function to load conversation history from MongoDB
 def load_conversation_history(collection, chat_id):
@@ -29,13 +38,12 @@ def delete_conversation(collection, chat_id):
 
 # Sidebar for email, password input, and chat history
 with st.sidebar:
-    # User input for email and password
+    st.header("Login")
     email = st.text_input("Email:")
     password = st.text_input("Password:", type="password")
 
-    # Check if email and password are provided
     if email and password:
-        # Log in to huggingface and grant authorization to huggingchat
+        # Log in to HuggingFace and grant authorization to HuggingChat
         cookie_path_dir = "./cookies/"
         sign = Login(email, password)
         cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
@@ -57,8 +65,7 @@ with st.sidebar:
 # Main chat interface
 if 'chatbot' in locals():
     # MongoDB connection
-    connection_string = f"mongodb+srv://chatify:chatify@chatify.lshb08e.mongodb.net/?retryWrites=true&w=majority&appName=Chatify"
-    client = MongoClient(connection_string)
+    client = MongoClient(mongodb_connection_string)
     db = client.Chatify
     collection = db.conversation_history
 
@@ -71,20 +78,18 @@ if 'chatbot' in locals():
     chat_ids = get_all_chat_ids(collection)
     selected_chat_id = st.sidebar.selectbox("Select a chat", chat_ids, key="selected_chat_id")
 
-    # Display the selected chat's conversation
     if selected_chat_id:
         selected_chat_history = load_conversation_history(collection, selected_chat_id)
         st.subheader(f"Conversation with {selected_chat_id}")
         for i, message in enumerate(selected_chat_history):
             if message.startswith("You:"):
-                st.text_area(f"You:", value=message.split(": ", 1)[1], height=75, key=f"user_message_{i}")
+                st.text_area(f"You:", value=message.split(": ", 1)[1], height=75, key=f"user_message_{i}", disabled=True)
             else:
-                st.text_area(f"Bot:", value=message.split(": ", 1)[1], height=75, key=f"bot_message_{i}")
+                st.text_area(f"Bot:", value=message.split(": ", 1)[1], height=75, key=f"bot_message_{i}", disabled=True)
 
     # User input for the chatbot
     user_input = st.text_input("You:", key="user_input")
 
-    # Generate response when the user enters a message
     if user_input:
         # Append the user's message to the history
         conversation_history.append(f"You: {user_input}")
@@ -99,7 +104,7 @@ if 'chatbot' in locals():
         save_conversation_history(collection, chat_id, conversation_history)
 
         # Display the model's response
-        st.text_area("Bot:", value=output, height=200, max_chars=None, key="bot_response")
+        st.text_area("Bot:", value=output, height=200, max_chars=None, key="bot_response", disabled=True)
 
     # Allow user to name the conversation
     chat_name = st.text_input("Name this conversation:", key="chat_name")
@@ -123,22 +128,22 @@ if 'chatbot' in locals():
             st.experimental_rerun()
 
     with col2:
-        user_input = st.text_input("", key="user_input_bottom", label_visibility="collapsed")
-        if user_input:
+        user_input_bottom = st.text_input("", key="user_input_bottom", label_visibility="collapsed")
+        if user_input_bottom:
             # Append the user's message to the history
-            conversation_history.append(f"You: {user_input}")
+            conversation_history.append(f"You: {user_input_bottom}")
 
             # Query the Hugging Chat API
-            output = chatbot.query(user_input)
+            output_bottom = chatbot.query(user_input_bottom)
 
             # Append the bot's response to the history
-            conversation_history.append(f"Bot: {output}")
+            conversation_history.append(f"Bot: {output_bottom}")
 
             # Save the conversation history
             save_conversation_history(collection, chat_id, conversation_history)
 
             # Display the model's response
-            st.text_area("Bot:", value=output, height=200, max_chars=None, key="bot_response_bottom")
+            st.text_area("Bot:", value=output_bottom, height=200, max_chars=None, key="bot_response_bottom", disabled=True)
 
 # Run the Streamlit app
 if __name__ == "__main__":
